@@ -1,0 +1,42 @@
+﻿@page "/"
+@inject ISqliteWasmDbContextFactory<TaskDBContext> _factory
+<PageTitle>Home</PageTitle>
+
+<button class="btn btn-primary btn-lg" 
+@onclick="addNewTask">add Task blog</button>
+
+@if (tasks != null)
+{
+@foreach (var item in tasks)
+{
+    <h5 class="btn btn-warning">Id: @item.Id Name : @item.Name Date : @item.OnCreated</h5>
+}
+}
+
+@code {
+    private List<MyTask> tasks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        using var ctx = await _factory.CreateDbContextAsync();
+        tasks = ctx.Tasks.ToList();
+    }
+
+    private async void addNewTask()
+    {
+        using var ctx = await _factory.CreateDbContextAsync();
+        ctx.Tasks.AddAsync(new MyTask
+            {
+                Name = $"newTask{new Random().Next(int.MinValue, int.MaxValue)}",
+                OnCreated = DateTime.Now
+            });
+        ctx.SaveChanges();
+
+       await Load();
+    }
+}
